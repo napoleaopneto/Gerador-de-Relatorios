@@ -1,8 +1,48 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDoc } from '../store';
-import { PAGE_SIZES, pageCount, GRID } from '../model';
+import {
+  PAGE_SIZES,
+  pageCount,
+  GRID,
+  snap,
+  newTextElement,
+  newImageElement,
+  newTableElement,
+  newShapeElement,
+  newSignatureElement,
+  newQRElement,
+} from '../model';
 import Frame from './Frame';
 import { ElementRenderer } from './Elements';
+
+// Build an element of the dragged kind, positioned at (x, y).
+function makeElement(kind, x, y) {
+  switch (kind) {
+    case 'text':
+      return newTextElement(x, y);
+    case 'table':
+      return newTableElement(x, y);
+    case 'rect':
+    case 'ellipse':
+    case 'triangle':
+    case 'line':
+    case 'arrow':
+      return newShapeElement(kind, x, y);
+    case 'signature':
+      return newSignatureElement(x, y);
+    case 'qr':
+      return newQRElement(x, y);
+    case 'variable': {
+      const name = prompt('Nome da variável (ex: nome, data, empresa):', 'nome');
+      if (!name) return null;
+      const el = newTextElement(x, y);
+      el.html = `Olá, {{${name}}}!`;
+      return el;
+    }
+    default:
+      return null;
+  }
+}
 
 function isEditingTarget(t) {
   return (
@@ -21,6 +61,8 @@ export default function Canvas() {
     selectMany,
     selectAll,
     selectedIds,
+    setInsertPoint,
+    addElement,
     updateElement,
     updateMany,
     deleteMany,
@@ -119,6 +161,8 @@ export default function Canvas() {
       x: (e.clientX - rect.left) / zoom,
       y: (e.clientY - rect.top) / zoom,
     };
+    // Remember where the user clicked so new elements drop here, not at the top.
+    setInsertPoint({ x: Math.round(start.x), y: Math.round(start.y) });
     setMarquee({ ...start, w: 0, h: 0 });
 
     const onMove = (ev) => {
@@ -157,6 +201,48 @@ export default function Canvas() {
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
+  }
+
+  // ---------- drag-and-drop from the left rail (and OS image files) ----------
+  function dropPoint(e) {
+    const rect = sheetRef.current.getBoundingClientRect();
+    return {
+      x: snap(Math.round((e.clientX - rect.left) / zoom), snapOn),
+      y: snap(Math.round((e.clientY - rect.top) / zoom), snapOn),
+    };
+  }
+
+  function placeImageFile(file, x, y) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 360;
+        let w = img.width;
+        let h = img.height;
+        if (w > max) {
+          h = (h * max) / w;
+          w = max;
+        }
+        addElement(newImageElement(reader.result, Math.round(w), Math.round(h), x, y));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    const { x, y } = dropPoint(e);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      placeImageFile(file, x, y);
+      return;
+    }
+    const kind = e.dataTransfer.getData('application/x-el');
+    if (!kind) return;
+    const el = makeElement(kind, x, y);
+    if (el) addElement(el);
   }
 
   const clampZoom = (z) => Math.min(2, Math.max(0.25, z));
@@ -211,6 +297,11 @@ export default function Canvas() {
               backgroundSize: showGrid ? `${GRID}px ${GRID}px` : undefined,
             }}
             onMouseDown={onSheetDown}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDrop={onDrop}
           >
             {/* per-page header / footer / break guides */}
             {Array.from({ length: pages }).map((_, pi) => (

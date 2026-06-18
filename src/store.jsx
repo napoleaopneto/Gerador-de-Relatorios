@@ -32,9 +32,13 @@ function reducer(state, action) {
         doc: normalizeDoc(action.doc),
         selectedIds: [],
         clipboard: state.clipboard,
+        insertPoint: { x: 60, y: 60 },
         past: [],
         future: [],
       };
+
+    case 'SET_INSERT':
+      return { ...state, insertPoint: action.point };
 
     case 'CHECKPOINT':
       // Snapshot before a continuous edit; no doc change yet.
@@ -153,6 +157,7 @@ export function DocProvider({ children }) {
     doc: newDocument(),
     selectedIds: [],
     clipboard: [],
+    insertPoint: { x: 60, y: 60 },
     past: [],
     future: [],
   }));
@@ -170,6 +175,8 @@ export function DocProvider({ children }) {
         ? state.doc.elements.find((e) => e.id === primaryId) || null
         : null,
       selectedElements: state.doc.elements.filter((e) => selectedIds.includes(e.id)),
+      insertPoint: state.insertPoint,
+      setInsertPoint: (point) => dispatch({ type: 'SET_INSERT', point }),
       canUndo: state.past.length > 0,
       canRedo: state.future.length > 0,
       clipboardCount: state.clipboard.length,
