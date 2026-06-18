@@ -212,6 +212,17 @@ export default function Canvas() {
     };
   }
 
+  function pickImageAt(x, y) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (file) placeImageFile(file, x, y);
+    };
+    input.click();
+  }
+
   function placeImageFile(file, x, y) {
     const reader = new FileReader();
     reader.onload = () => {
@@ -241,6 +252,10 @@ export default function Canvas() {
     }
     const kind = e.dataTransfer.getData('application/x-el');
     if (!kind) return;
+    if (kind === 'image') {
+      pickImageAt(x, y);
+      return;
+    }
     const el = makeElement(kind, x, y);
     if (el) addElement(el);
   }
