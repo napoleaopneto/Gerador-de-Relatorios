@@ -22,8 +22,81 @@ function tableSize(html) {
   return { rows: bodyRows + 1, cols: Math.max(headCols, bodyCols) };
 }
 
+function AlignPanel() {
+  const { selectedElements, updateMany, checkpoint } = useDoc();
+  const els = selectedElements;
+
+  function align(kind) {
+    checkpoint();
+    const xs = els.map((e) => e.x);
+    const ys = els.map((e) => e.y);
+    const rs = els.map((e) => e.x + e.w);
+    const bs = els.map((e) => e.y + e.h);
+    const minX = Math.min(...xs), maxR = Math.max(...rs);
+    const minY = Math.min(...ys), maxB = Math.max(...bs);
+    const cx = (minX + maxR) / 2, cy = (minY + maxB) / 2;
+    const up = {};
+    els.forEach((e) => {
+      if (kind === 'left') up[e.id] = { x: minX };
+      else if (kind === 'right') up[e.id] = { x: maxR - e.w };
+      else if (kind === 'hcenter') up[e.id] = { x: Math.round(cx - e.w / 2) };
+      else if (kind === 'top') up[e.id] = { y: minY };
+      else if (kind === 'bottom') up[e.id] = { y: maxB - e.h };
+      else if (kind === 'vcenter') up[e.id] = { y: Math.round(cy - e.h / 2) };
+    });
+    updateMany(up);
+  }
+
+  function distribute(axis) {
+    if (els.length < 3) return;
+    checkpoint();
+    const key = axis === 'h' ? 'x' : 'y';
+    const sorted = [...els].sort((a, b) => a[key] - b[key]);
+    const first = sorted[0], last = sorted[sorted.length - 1];
+    const span = last[key] - first[key];
+    const gap = span / (sorted.length - 1);
+    const up = {};
+    sorted.forEach((e, i) => {
+      if (i > 0 && i < sorted.length - 1)
+        up[e.id] = { [key]: Math.round(first[key] + gap * i) };
+    });
+    updateMany(up);
+  }
+
+  return (
+    <div className="panel">
+      <h3>{els.length} elementos</h3>
+      <div className="field">
+        <label>Alinhar</label>
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <button className="btn" onClick={() => align('left')}>⬅</button>
+          <button className="btn" onClick={() => align('hcenter')}>↔</button>
+          <button className="btn" onClick={() => align('right')}>➡</button>
+          <button className="btn" onClick={() => align('top')}>⬆</button>
+          <button className="btn" onClick={() => align('vcenter')}>↕</button>
+          <button className="btn" onClick={() => align('bottom')}>⬇</button>
+        </div>
+      </div>
+      <div className="field">
+        <label>Distribuir (3+)</label>
+        <div className="row">
+          <button className="btn" style={{ flex: 1 }} disabled={els.length < 3} onClick={() => distribute('h')}>
+            Horizontal
+          </button>
+          <button className="btn" style={{ flex: 1 }} disabled={els.length < 3} onClick={() => distribute('v')}>
+            Vertical
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PropertiesPanel() {
-  const { doc, selected, updateElement, deleteElement, reorder, setMeta } = useDoc();
+  const { doc, selected, selectedIds, updateElement, deleteElement, duplicate, reorder, setMeta, checkpoint } =
+    useDoc();
+
+  if (selectedIds.length > 1) return <AlignPanel />;
 
   if (!selected) {
     return (
@@ -93,6 +166,7 @@ export default function PropertiesPanel() {
     <input
       type="number"
       value={Math.round(el[k])}
+      onFocus={checkpoint}
       onChange={(e) => updateElement(el.id, { [k]: Number(e.target.value) })}
     />
   );
@@ -194,6 +268,37 @@ export default function PropertiesPanel() {
         );
       })()}
 
+      {el.type === 'signature' && (
+        <>
+          <div className="field">
+            <label>Nome / texto acima da linha</label>
+            <input
+              value={el.name || ''}
+              onChange={(e) => updateElement(el.id, { name: e.target.value })}
+              placeholder="Ex: {{cliente.nome}}"
+            />
+          </div>
+          <div className="field">
+            <label>Legenda</label>
+            <input
+              value={el.label || ''}
+              onChange={(e) => updateElement(el.id, { label: e.target.value })}
+            />
+          </div>
+        </>
+      )}
+
+      {el.type === 'qr' && (
+        <div className="field">
+          <label>Conteúdo do QR</label>
+          <input
+            value={el.value || ''}
+            onChange={(e) => updateElement(el.id, { value: e.target.value })}
+            placeholder="URL ou texto / {{variável}}"
+          />
+        </div>
+      )}
+
       {el.type === 'shape' && (
         <>
           <div className="field">
@@ -232,6 +337,10 @@ export default function PropertiesPanel() {
           ⤵ Trás
         </button>
       </div>
+
+      <button className="btn" style={{ width: '100%', marginBottom: 8 }} onClick={duplicate}>
+        ⧉ Duplicar (Ctrl+D)
+      </button>
 
       <button
         className="btn"

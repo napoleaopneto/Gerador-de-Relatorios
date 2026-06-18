@@ -85,6 +85,69 @@ export function downloadJSON(doc) {
   URL.revokeObjectURL(url);
 }
 
+// ---------- Dataset (mail merge) ----------
+// Parse JSON (array of objects) or CSV text into an array of flat row objects.
+export function parseDataset(text, filename = '') {
+  const trimmed = text.trim();
+  if (filename.endsWith('.json') || trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    const data = JSON.parse(trimmed);
+    return Array.isArray(data) ? data : [data];
+  }
+  return parseCSV(trimmed);
+}
+
+// Minimal CSV parser: handles quoted fields, commas/semicolons, escaped quotes.
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  const delim = (text.split('\n')[0].match(/;/g) || []).length >
+    (text.split('\n')[0].match(/,/g) || []).length ? ';' : ',';
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === delim) { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+
+  if (!rows.length) return [];
+  const headers = rows[0].map((h) => h.trim());
+  return rows.slice(1)
+    .filter((r) => r.some((c) => c.trim() !== ''))
+    .map((r) => Object.fromEntries(headers.map((h, i) => [h, (r[i] ?? '').trim()])));
+}
+
+export function pickDatasetFile() {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,.csv,text/csv,application/json';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return resolve(null);
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          resolve(parseDataset(reader.result, file.name.toLowerCase()));
+        } catch (err) {
+          alert('Falha ao ler dados: ' + err.message);
+          resolve(null);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  });
+}
+
 function openJSONFallback() {
   return new Promise((resolve) => {
     const input = document.createElement('input');

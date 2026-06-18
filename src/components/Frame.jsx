@@ -1,18 +1,29 @@
 import { useRef } from 'react';
 import { useDoc } from '../store';
+import { snap } from '../model';
 
 const HANDLES = ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e'];
 
-export default function Frame({ el, editing, onDoubleClick, children }) {
-  const { selectedId, select, updateElement } = useDoc();
-  const selected = selectedId === el.id;
+export default function Frame({ el, editing, onDoubleClick, children, zoom = 1, snapOn = false }) {
+  const { selectedIds, selectedElements, select, updateElement, updateMany, checkpoint } =
+    useDoc();
+  const selected = selectedIds.includes(el.id);
   const drag = useRef(null);
 
   function onDragStart(e) {
     if (editing) return;
     e.stopPropagation();
-    select(el.id);
-    drag.current = { mode: 'move', sx: e.clientX, sy: e.clientY, ox: el.x, oy: el.y };
+    // Clicking an unselected element starts a fresh single selection; clicking
+    // an already-selected one keeps the whole group so it moves together.
+    if (!selected) select(el.id, e.shiftKey);
+    checkpoint();
+    const group = selected ? selectedElements : [el];
+    drag.current = {
+      mode: 'move',
+      sx: e.clientX,
+      sy: e.clientY,
+      origins: group.map((g) => ({ id: g.id, x: g.x, y: g.y })),
+    };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   }
@@ -21,6 +32,7 @@ export default function Frame({ el, editing, onDoubleClick, children }) {
     e.stopPropagation();
     e.preventDefault();
     select(el.id);
+    checkpoint();
     drag.current = {
       mode: 'resize',
       dir,
@@ -38,11 +50,15 @@ export default function Frame({ el, editing, onDoubleClick, children }) {
   function onMove(e) {
     const d = drag.current;
     if (!d) return;
-    const dx = e.clientX - d.sx;
-    const dy = e.clientY - d.sy;
+    const dx = (e.clientX - d.sx) / zoom;
+    const dy = (e.clientY - d.sy) / zoom;
 
     if (d.mode === 'move') {
-      updateElement(el.id, { x: Math.round(d.ox + dx), y: Math.round(d.oy + dy) });
+      const updates = {};
+      for (const o of d.origins) {
+        updates[o.id] = { x: snap(o.x + dx, snapOn), y: snap(o.y + dy, snapOn) };
+      }
+      updateMany(updates);
       return;
     }
     // resize
@@ -62,10 +78,10 @@ export default function Frame({ el, editing, onDoubleClick, children }) {
       y = oy + (oh - h);
     }
     updateElement(el.id, {
-      x: Math.round(x),
-      y: Math.round(y),
-      w: Math.round(w),
-      h: Math.round(h),
+      x: snap(x, snapOn),
+      y: snap(y, snapOn),
+      w: snap(w, snapOn),
+      h: snap(h, snapOn),
     });
   }
 
@@ -87,13 +103,14 @@ export default function Frame({ el, editing, onDoubleClick, children }) {
       }}
       onMouseDown={(e) => {
         e.stopPropagation();
-        select(el.id);
+        select(el.id, e.shiftKey);
       }}
       onDoubleClick={onDoubleClick}
     >
       {children}
       {!editing && <div className="drag-handle" onMouseDown={onDragStart} />}
       {selected &&
+        selectedIds.length === 1 &&
         HANDLES.map((h) => (
           <div
             key={h}

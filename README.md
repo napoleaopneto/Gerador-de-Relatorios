@@ -17,11 +17,22 @@ Editor de documentos visual (drag-and-drop) em **React + Vite**. Monte contratos
 |----------|-----------|
 | **Texto** | Caixa rich-text editável (duplo clique). Cresce/encolhe no tamanho exato do conteúdo. |
 | **Imagem** | Upload do PC, redimensionada automaticamente (máx. 360px de largura ao inserir). |
-| **Tabela** | Tabela 3×3 inicial (editável como texto). |
-| **Retângulo / Elipse / Linha** | Formas vetoriais (SVG) com preenchimento, borda e espessura. |
+| **Tabela** | Tabela 3×3 inicial (editável como texto, +/− linhas e colunas no painel). |
+| **Retângulo / Elipse / Triângulo / Linha / Seta** | Formas vetoriais (SVG) com preenchimento, borda e espessura. |
+| **Assinatura** | Linha de assinatura com nome (aceita `{{variável}}`) e legenda. |
+| **QR Code** | QR gerado do conteúdo (URL/texto/`{{variável}}`), vetorial em todas as exportações. |
 | **Variável** | Placeholder `{{nome}}` destacado, para mala-direta / preenchimento posterior. |
 
 Cada elemento suporta **mover, redimensionar, rotacionar** (−180° a 180°), ordenar (frente/trás) e excluir.
+
+### Edição produtiva
+- **Desfazer / Refazer** (Ctrl+Z / Ctrl+Y) com histórico de até 80 passos.
+- **Copiar / Colar / Duplicar** (Ctrl+C / Ctrl+V / Ctrl+D) e **Selecionar tudo** (Ctrl+A).
+- **Seleção múltipla**: clique com Shift ou arraste uma caixa (marquee) na folha; move o grupo junto.
+- **Alinhar e distribuir** vários elementos (esquerda/centro/direita, topo/meio/base, distribuição H/V).
+- **Mover com o teclado**: setas (1px) e Shift+setas (10px).
+- **Zoom** (25%–200%), **grade** e **ajustar à grade (snap)** na barra do canvas.
+- **Auto-save** do rascunho + **recuperação** ao reabrir o app.
 
 ### Formatação de texto (toolbar)
 - Fonte (9 famílias) e tamanho (8–64px).
@@ -31,9 +42,12 @@ Cada elemento suporta **mover, redimensionar, rotacionar** (−180° a 180°), o
 - Listas com marcadores e numeradas.
 - Limpar formatação.
 
-### Variáveis / templates
+### Variáveis / templates / mala-direta
 - Sintaxe `{{Grupo.campo}}` (ex.: `{{Empresa.razao_social}}`), destacada em amarelo no editor.
 - Ideal para modelos reaproveitáveis (contratos, propostas).
+- **Painel { } Variáveis**: lista todas as variáveis do documento e preenche valores (refletem na folha e nas exportações).
+- **Campos automáticos**: `{{data}}`, `{{hora}}` (resolvidos no momento da exportação) e `{{pagina}}` (numeração por página).
+- **✉ Mala-direta**: importe `.csv` ou `.json` (uma linha = um documento); pré-visualize a tabela e **gere em lote** — imprimir/PDF único (texto selecionável) ou baixar HTML.
 
 ### Salvar / abrir
 - **Salvar no navegador** (IndexedDB) — lista de documentos com data e contagem de elementos.
@@ -44,7 +58,7 @@ Cada elemento suporta **mover, redimensionar, rotacionar** (−180° a 180°), o
 ### Exportar / imprimir
 | Formato | Como funciona |
 |---------|---------------|
-| **PDF** | Snapshot via html2canvas → fatiado por página → jsPDF. |
+| **PDF** | Snapshot via html2canvas → fatiado por página → jsPDF (imagem). Para **PDF com texto selecionável**, use **🖨 Imprimir** → "Salvar como PDF". |
 | **PNG** | Uma imagem por página. |
 | **HTML** | Documento standalone autocontido. |
 | **Word (DOCX)** | Layout achatado em conteúdo empilhado (texto/tabelas/imagens). |
@@ -85,6 +99,7 @@ npm run lint
 - **React 19** + **Vite 8**
 - **jspdf** + **html2canvas** — exportação PDF/PNG
 - **html-docx-js-typescript** — exportação Word
+- **qrcode** — geração de QR code (SVG, síncrono)
 - **uuid** — IDs de documento/elemento
 - Armazenamento: **IndexedDB** + **File System Access API**
 
@@ -118,14 +133,19 @@ src/
   id, name,
   pageSize: 'A4' | 'A5' | 'Carta' | 'Paisagem',
   showHeader, showFooter, headerText, footerText,  // {{pagina}} no rodapé
+  vars: { /* valores preenchidos para {{variáveis}} */ },
   elements: [
     // texto/tabela
     { id, type: 'text', x, y, w, h, rotation, html },
     // imagem
     { id, type: 'image', x, y, w, h, rotation, src },
     // forma
-    { id, type: 'shape', shape: 'rect'|'ellipse'|'line',
+    { id, type: 'shape', shape: 'rect'|'ellipse'|'triangle'|'line'|'arrow',
       x, y, w, h, rotation, fill, stroke, strokeWidth },
+    // assinatura
+    { id, type: 'signature', x, y, w, h, rotation, name, label },
+    // qr code
+    { id, type: 'qr', x, y, w, h, rotation, value },
   ],
   updatedAt,
 }

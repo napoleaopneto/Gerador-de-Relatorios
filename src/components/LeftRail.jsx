@@ -5,6 +5,8 @@ import {
   newImageElement,
   newTableElement,
   newShapeElement,
+  newSignatureElement,
+  newQRElement,
 } from '../model';
 
 export default function LeftRail() {
@@ -47,7 +49,11 @@ export default function LeftRail() {
     { ico: '▦', label: 'Tabela', onClick: () => addElement(newTableElement()) },
     { ico: '▭', label: 'Retângulo', onClick: () => addElement(newShapeElement('rect')) },
     { ico: '◯', label: 'Elipse', onClick: () => addElement(newShapeElement('ellipse')) },
+    { ico: '△', label: 'Triângulo', onClick: () => addElement(newShapeElement('triangle')) },
     { ico: '╱', label: 'Linha', onClick: () => addElement(newShapeElement('line')) },
+    { ico: '→', label: 'Seta', onClick: () => addElement(newShapeElement('arrow')) },
+    { ico: '✒', label: 'Assinatura', onClick: () => addElement(newSignatureElement()) },
+    { ico: '▣', label: 'QR Code', onClick: () => addElement(newQRElement()) },
     { ico: '{ }', label: 'Variável', onClick: addVar },
   ];
 

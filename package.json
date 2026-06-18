@@ -14,6 +14,7 @@
     "html-docx-js-typescript": "^0.1.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
+    "qrcode": "^1.5.4",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "uuid": "^14.0.0"
