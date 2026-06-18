@@ -1,0 +1,80 @@
+{
+  "id": "exemplo-relatorio-mensal",
+  "name": "Relatório Mensal de Vendas",
+  "pageSize": "A4",
+  "showHeader": true,
+  "showFooter": true,
+  "headerText": "Empresa Exemplo Ltda. — Confidencial",
+  "footerText": "Relatório gerado automaticamente — página {{pagina}}",
+  "updatedAt": 0,
+  "pages": [
+    {
+      "id": "p1",
+      "elements": [
+        {
+          "id": "e1",
+          "type": "shape",
+          "shape": "rect",
+          "x": 0,
+          "y": 60,
+          "w": 794,
+          "h": 8,
+          "rotation": 0,
+          "fill": "#4263eb",
+          "stroke": "#4263eb",
+          "strokeWidth": 0
+        },
+        {
+          "id": "e2",
+          "type": "text",
+          "x": 60,
+          "y": 110,
+          "w": 674,
+          "h": 70,
+          "rotation": 0,
+          "html": "<div style=\"font-size:34px;font-weight:700;font-family:Georgia;\">Relatório Mensal de Vendas</div>"
+        },
+        {
+          "id": "e3",
+          "type": "text",
+          "x": 60,
+          "y": 180,
+          "w": 674,
+          "h": 30,
+          "rotation": 0,
+          "html": "<div style=\"font-size:15px;color:#666;\">Período: {{mes}} / {{ano}} &nbsp;•&nbsp; Responsável: {{responsavel}}</div>"
+        },
+        {
+          "id": "e4",
+          "type": "text",
+          "x": 60,
+          "y": 240,
+          "w": 674,
+          "h": 90,
+          "rotation": 0,
+          "html": "<div style=\"font-size:14px;line-height:1.5;text-align:justify;\">Este relatório apresenta o desempenho comercial do período. Os números abaixo consolidam as vendas por região e demonstram a evolução em relação ao mês anterior.</div>"
+        },
+        {
+          "id": "e5",
+          "type": "text",
+          "x": 60,
+          "y": 350,
+          "w": 674,
+          "h": 160,
+          "rotation": 0,
+          "html": "<table><thead><tr><th>Região</th><th>Meta (R$)</th><th>Realizado (R$)</th><th>%</th></tr></thead><tbody><tr><td>Sudeste</td><td>120.000</td><td>138.500</td><td>115%</td></tr><tr><td>Sul</td><td>80.000</td><td>76.200</td><td>95%</td></tr><tr><td>Nordeste</td><td>60.000</td><td>71.900</td><td>120%</td></tr></tbody></table>"
+        },
+        {
+          "id": "e6",
+          "type": "text",
+          "x": 60,
+          "y": 540,
+          "w": 674,
+          "h": 80,
+          "rotation": 0,
+          "html": "<div style=\"font-size:14px;line-height:1.5;\"><b>Conclusão:</b> a meta global foi superada em <span style=\"color:#2b8a3e;font-weight:700;\">+9%</span>, puxada pelas regiões Sudeste e Nordeste.</div>"
+        }
+      ]
+    }
+  ]
+}

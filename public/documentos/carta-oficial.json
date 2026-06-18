@@ -1,0 +1,80 @@
+{
+  "id": "exemplo-carta-oficial",
+  "name": "Carta / Ofício",
+  "pageSize": "A4",
+  "showHeader": false,
+  "showFooter": true,
+  "headerText": "",
+  "footerText": "{{cidade}}, {{data}}",
+  "updatedAt": 0,
+  "pages": [
+    {
+      "id": "p1",
+      "elements": [
+        {
+          "id": "e1",
+          "type": "text",
+          "x": 60,
+          "y": 60,
+          "w": 674,
+          "h": 60,
+          "rotation": 0,
+          "html": "<div style=\"font-size:22px;font-weight:700;text-align:center;\">{{empresa}}</div><div style=\"font-size:12px;color:#666;text-align:center;\">CNPJ {{cnpj}} — {{endereco}}</div>"
+        },
+        {
+          "id": "e2",
+          "type": "shape",
+          "shape": "line",
+          "x": 60,
+          "y": 130,
+          "w": 674,
+          "h": 2,
+          "rotation": 0,
+          "fill": "transparent",
+          "stroke": "#333333",
+          "strokeWidth": 1
+        },
+        {
+          "id": "e3",
+          "type": "text",
+          "x": 60,
+          "y": 170,
+          "w": 674,
+          "h": 30,
+          "rotation": 0,
+          "html": "<div style=\"font-size:14px;\"><b>Ofício nº {{numero}}/{{ano}}</b></div>"
+        },
+        {
+          "id": "e4",
+          "type": "text",
+          "x": 60,
+          "y": 220,
+          "w": 674,
+          "h": 60,
+          "rotation": 0,
+          "html": "<div style=\"font-size:14px;line-height:1.5;\">Ao Sr(a). <b>{{destinatario}}</b><br/>{{cargo}}</div>"
+        },
+        {
+          "id": "e5",
+          "type": "text",
+          "x": 60,
+          "y": 300,
+          "w": 674,
+          "h": 200,
+          "rotation": 0,
+          "html": "<div style=\"font-size:14px;line-height:1.6;text-align:justify;\">Prezado(a) Senhor(a),<br/><br/>Vimos por meio deste comunicar o assunto referente a {{assunto}}. Solicitamos a gentileza de analisar as informações em anexo e retornar com o posicionamento até a data acordada.<br/><br/>Sem mais para o momento, colocamo-nos à disposição para eventuais esclarecimentos.</div>"
+        },
+        {
+          "id": "e6",
+          "type": "text",
+          "x": 60,
+          "y": 560,
+          "w": 674,
+          "h": 70,
+          "rotation": 0,
+          "html": "<div style=\"font-size:14px;text-align:center;\">Atenciosamente,<br/><br/><b>{{remetente}}</b><br/>{{cargo_remetente}}</div>"
+        }
+      ]
+    }
+  ]
+}

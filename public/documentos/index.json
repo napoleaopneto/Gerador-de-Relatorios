@@ -1,0 +1,12 @@
+[
+  {
+    "file": "relatorio-mensal.json",
+    "name": "Relatório Mensal de Vendas",
+    "description": "Capa com título, texto e tabela de resultados"
+  },
+  {
+    "file": "carta-oficial.json",
+    "name": "Carta / Ofício",
+    "description": "Documento formal com cabeçalho e campos variáveis"
+  }
+]
