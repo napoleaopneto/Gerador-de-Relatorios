@@ -1,5 +1,27 @@
 import { useDoc } from '../store';
 
+const isTable = (el) => el?.type === 'text' && /<table/i.test(el.html || '');
+
+// Parse table html, run mutator on the <table> node, return serialized html.
+function editTable(html, fn) {
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  const table = dom.querySelector('table');
+  if (!table) return html;
+  fn(table);
+  return table.outerHTML;
+}
+
+function tableSize(html) {
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  const table = dom.querySelector('table');
+  if (!table) return { rows: 0, cols: 0 };
+  const headCols = table.querySelectorAll('thead tr:first-child > *').length;
+  const firstBody = table.querySelector('tbody tr');
+  const bodyCols = firstBody ? firstBody.children.length : 0;
+  const bodyRows = table.querySelectorAll('tbody tr').length;
+  return { rows: bodyRows + 1, cols: Math.max(headCols, bodyCols) };
+}
+
 export default function PropertiesPanel() {
   const { doc, selected, updateElement, deleteElement, reorder, setMeta } = useDoc();
 
@@ -109,6 +131,68 @@ export default function PropertiesPanel() {
           onChange={(e) => updateElement(el.id, { rotation: Number(e.target.value) })}
         />
       </div>
+
+      {isTable(el) && (() => {
+        const { rows, cols } = tableSize(el.html);
+        const apply = (fn) => updateElement(el.id, { html: editTable(el.html, fn) });
+
+        const addRow = () =>
+          apply((t) => {
+            const tbody = t.querySelector('tbody') || t;
+            const tr = document.createElement('tr');
+            for (let i = 0; i < cols; i++) {
+              const td = document.createElement('td');
+              td.innerHTML = '&nbsp;';
+              tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+          });
+        const delRow = () =>
+          apply((t) => {
+            const trs = t.querySelectorAll('tbody tr');
+            if (trs.length > 0) trs[trs.length - 1].remove();
+          });
+        const addCol = () =>
+          apply((t) => {
+            t.querySelectorAll('thead tr').forEach((tr) => {
+              const th = document.createElement('th');
+              th.textContent = `Coluna ${cols + 1}`;
+              tr.appendChild(th);
+            });
+            t.querySelectorAll('tbody tr').forEach((tr) => {
+              const td = document.createElement('td');
+              td.innerHTML = '&nbsp;';
+              tr.appendChild(td);
+            });
+          });
+        const delCol = () =>
+          apply((t) => {
+            if (cols <= 1) return;
+            t.querySelectorAll('tr').forEach((tr) => {
+              if (tr.lastElementChild) tr.lastElementChild.remove();
+            });
+          });
+
+        return (
+          <>
+            <h3 style={{ marginTop: 8 }}>Tabela</h3>
+            <div className="field">
+              <label>Linhas ({rows})</label>
+              <div className="row">
+                <button className="btn" style={{ flex: 1 }} onClick={addRow}>+ Linha</button>
+                <button className="btn" style={{ flex: 1 }} onClick={delRow} disabled={rows <= 1}>− Linha</button>
+              </div>
+            </div>
+            <div className="field">
+              <label>Colunas ({cols})</label>
+              <div className="row">
+                <button className="btn" style={{ flex: 1 }} onClick={addCol}>+ Coluna</button>
+                <button className="btn" style={{ flex: 1 }} onClick={delCol} disabled={cols <= 1}>− Coluna</button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {el.type === 'shape' && (
         <>
